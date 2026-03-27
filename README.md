@@ -1,99 +1,93 @@
 # Lab3-LT
 
-## Cấu trúc thư mục
+Repository này chứa toàn bộ mã nguồn, notebook và báo cáo cho Lab 03 môn Thị giác máy tính. Trọng tâm của bài là xây dựng và đánh giá các biến thể ANN trên ba nhóm dữ liệu:
+
+- `MNIST`
+- `FashionMNIST`
+- `ChestMNIST` trong họ `MedMNIST`
+
+## Cấu trúc repo
 
 ```text
 .
-|-- data/
+|-- notebooks/
+|   |-- fashionmnist/
+|   `-- chestmnist/
 |-- report/
 |   |-- assets/
-|   |-- appendix/
-|   |-- build/
 |   |-- figures/
 |   |-- sections/
 |   |-- tables/
 |   `-- main.tex
 |-- scripts/
-|-- .vscode/
+|-- data/          # dữ liệu local, không track git
+|-- artifacts/     # kết quả train local, không track git
+|-- COLAB.md
 `-- README.md
 ```
 
-## Mục đích
+## Ý nghĩa các thư mục chính
 
-Project này tiếp nối `Lab2-LT`. Nếu Lab 2 tập trung vào EDA cho MNIST Handwritten, thì Lab 3 tập trung vào xây dựng lời giải phân lớp chữ số bằng ANN, không dùng CNN.
+- `scripts/`: script train, evaluate và generate diagnostics.
+- `notebooks/`: notebook Colab đã chuẩn bị sẵn theo từng dataset.
+- `report/`: toàn bộ source LaTeX của báo cáo.
+- `data/`: cache và dataset local, chỉ dùng khi chạy thực nghiệm.
+- `artifacts/`: checkpoint, metrics và output sau khi train.
 
-Hướng triển khai hiện tại là:
+## Notebook Colab
 
-- tiền xử lý hình học bằng `deslant + recenter`
-- trích đặc trưng `HOG`
-- ghép `raw pixel đã chuẩn hóa hình học` và `HOG features`
-- huấn luyện `ANN hai nhánh` với `BatchNorm + Dropout`
+`FashionMNIST`
 
-## Cách dùng nhanh
+- `notebooks/fashionmnist/fashion_mnist_naive_colab.ipynb`
+- `notebooks/fashionmnist/fashion_mnist_colab.ipynb`
+- `notebooks/fashionmnist/fashion_mnist_two_branch_colab.ipynb`
+- `notebooks/fashionmnist/fashion_mnist_single_branch_ensemble_colab.ipynb`
+- `notebooks/fashionmnist/fashion_mnist_single_branch_ensemble_eval_colab.ipynb`
+- `notebooks/fashionmnist/fashion_mnist_region_fusion_ensemble_colab.ipynb`
 
-1. Cập nhật metadata trong `report/main.tex`.
-2. Chỉnh lời nói đầu trong `report/preface.tex` nếu cần.
-3. Viết nội dung chính trong `report/sections/content_main.tex` và các file chương liên quan.
-4. Bổ sung tài liệu tham khảo vào `report/references.bib`.
+`ChestMNIST`
 
-## Huấn luyện mô hình ANN
+- `notebooks/chestmnist/chestmnist_naive_single_branch_colab.ipynb`
+- `notebooks/chestmnist/chestmnist_cv_weighted_ann_colab.ipynb`
+- `notebooks/chestmnist/chestmnist_feature_fusion_ann_colab.ipynb`
+- `notebooks/chestmnist/chestmnist_feature_fusion_ann_lite_colab.ipynb`
 
-Chạy baseline đầy đủ:
+## Chạy nhanh bằng script
 
-```powershell
-python scripts\train_mnist_ann.py --epochs 20 --batch-size 256
-```
-
-Chạy baseline naive chỉ dùng raw pixel và ANN:
+`MNIST naive`
 
 ```powershell
 python scripts\train_mnist_ann_naive.py --epochs 20 --batch-size 256
 ```
 
-Chạy ANN một nhánh với `deslant + recenter + HOG + BatchNorm + Dropout`:
+`MNIST single-branch`
 
 ```powershell
 python scripts\train_mnist_ann_single_branch.py --epochs 20 --batch-size 256
 ```
 
-Chạy cùng pipeline trên `FashionMNIST`:
+`MNIST two-branch`
+
+```powershell
+python scripts\train_mnist_ann.py --epochs 20 --batch-size 256
+```
+
+`FashionMNIST single-branch`
 
 ```powershell
 python scripts\train_mnist_ann_single_branch.py --dataset fashionmnist --epochs 50 --batch-size 256
 ```
 
-Chạy `two-branch ANN` trên `FashionMNIST`:
+`FashionMNIST two-branch`
 
 ```powershell
 python scripts\train_mnist_ann.py --dataset fashionmnist --epochs 50 --batch-size 256
 ```
 
-Chạy biến thể `single-branch` với affine nhẹ hơn và augmentation cục bộ (`elastic distortion + stroke jitter`):
+`FashionMNIST naive`
 
 ```powershell
-python scripts\train_mnist_ann_single_branch.py --epochs 20 --batch-size 256 --cache-dir data\mnist_ann_single_branch_aug_cache --output-dir artifacts\mnist_ann_single_branch_augmented --max-rotate-deg 4 --max-shift-ratio 0.03 --max-shear-deg 3 --elastic-prob 0.45 --elastic-alpha 1.4 --elastic-sigma 4.5 --stroke-jitter-prob 0.2 --stroke-kernel-size 2
-```
-
-Chạy biến thể augmentation cục bộ trên `FashionMNIST`:
-
-```powershell
-python scripts\train_mnist_ann_single_branch.py --dataset fashionmnist --epochs 50 --batch-size 256 --cache-dir data\fashion_mnist_ann_single_branch_aug_cache --output-dir artifacts\fashion_mnist_ann_single_branch_augmented --max-rotate-deg 4 --max-shift-ratio 0.03 --max-shear-deg 3 --elastic-prob 0.45 --elastic-alpha 1.4 --elastic-sigma 4.5 --stroke-jitter-prob 0.2 --stroke-kernel-size 2
-```
-
-Artifact sẽ được lưu vào:
-
-```text
-artifacts/mnist_ann/
-|-- best_model.pt
-|-- metrics.json
-|-- class_accuracy.json
-`-- confusion_matrix.npy
-```
-
-Chạy smoke test nhanh:
-
-```powershell
-python scripts\train_mnist_ann.py --epochs 1 --limit-train 512 --limit-test 128 --batch-size 128 --cache-dir data\debug_cache --output-dir artifacts\debug_run
+python scripts\train_fashion_ann_naive.py --epochs 50 --batch-size 256
 ```
 
 ## Biên dịch báo cáo
@@ -107,4 +101,12 @@ xelatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=b
 xelatex -synctex=1 -interaction=nonstopmode -file-line-error -output-directory=build main.tex
 ```
 
-VS Code đã có sẵn recipe tương ứng trong `.vscode/settings.json`.
+PDF đầu ra nằm ở:
+
+- `report/build/main.pdf`
+
+## Ghi chú
+
+- `data/` và `artifacts/` được giữ local để repo gọn, không đẩy lên GitHub.
+- Toàn bộ link GitHub của project đã được chèn trực tiếp vào báo cáo.
+- Hướng dẫn chạy Colab tổng quát nằm trong `COLAB.md`.

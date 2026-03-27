@@ -13,6 +13,8 @@
 __pycache__/
 *.pyc
 report/build/
+report/build_clean/
+report/build_fresh/
 artifacts/
 data/
 data/_reports/

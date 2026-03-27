@@ -4,6 +4,10 @@
 
 Chạy cấu hình `single-branch ANN` trên `FashionMNIST` bằng GPU `T4` trên Google Colab.
 
+Notebook hiện được đặt trong:
+
+- `notebooks/fashionmnist/`
+
 Script dùng:
 
 ```powershell
@@ -31,7 +35,7 @@ Chạy cell này trước:
 ## Cách dùng với VS Code + Colab extension
 
 1. Mở repo này trong VS Code.
-2. Kết nối notebook kernel tới Colab.
+2. Mở notebook trong `notebooks/fashionmnist/` rồi kết nối kernel tới Colab.
 3. Đảm bảo thư mục repo đã có mặt trong Google Drive:
 
 ```python
