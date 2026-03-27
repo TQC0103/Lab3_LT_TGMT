@@ -1,0 +1,14 @@
+\begin{table}[H]
+\centering
+\caption{Tổng hợp kết quả tốt nhất trên ba bộ dữ liệu}
+\label{tab:overall-project-summary}
+\begin{tabularx}{\textwidth}{l l l c >{\raggedright\arraybackslash}X}
+\toprule
+Bộ dữ liệu & ANN tốt nhất & Chỉ số chính & Kết quả & Insight chính \\
+\midrule
+MNIST & Single-branch ANN & Test accuracy & 99.14\% & Chuẩn hóa hình học và HOG giải quyết phần lớn khó khăn; augmentation cục bộ và two-branch không tạo thêm lợi ích rõ rệt. \\
+FashionMNIST & Single-branch ensemble & Test accuracy & 91.68\% & HOG và tiền xử lý vẫn hữu ích, nhưng bước cải thiện tốt nhất là ensemble để giảm phương sai dự đoán giữa các mô hình đơn. \\
+ChestMNIST & Feature-fusion lite ANN & Macro AUC / ACC & 0.7424 / 0.7301 & Weighted loss, cross-validation ensemble và feature fusion là ba thành phần quyết định để ANN cạnh tranh được trên dữ liệu y sinh đa nhãn. \\
+\bottomrule
+\end{tabularx}
+\end{table}
