@@ -1,0 +1,19 @@
+\begin{table}[H]
+\centering
+\caption{Phát biểu bài toán và thiết lập dữ liệu của ChestMNIST}
+\label{tab:chestmnist-problem-setup}
+\begin{tabular}{l c}
+\toprule
+Thành phần & Giá trị \\
+\midrule
+Kiểu bài toán & Multi-label classification \\
+Đầu vào & Ảnh X-quang ngực xám $28 \times 28$ \\
+Đầu ra & Vector logits $14$ chiều \\
+Số nhãn & $14$ nhãn bệnh độc lập \\
+Train chính thức & $78{,}468$ mẫu \\
+Validation chính thức & $11{,}219$ mẫu \\
+Test chính thức & $22{,}433$ mẫu \\
+Thiết lập Lab 03 & Naive dùng train/val/test; các biến thể sau dùng 3-fold CV trên train và test ở cuối \\
+\bottomrule
+\end{tabular}
+\end{table}

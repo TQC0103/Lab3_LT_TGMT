@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{Logic chuyển từ một biến thể ANN sang biến thể kế tiếp trên MNIST}
+\label{tab:mnist-ann-iteration-logic}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.7cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+Biến thể hiện tại & Điểm yếu quan sát được & Ý tưởng cho biến thể kế tiếp \\
+\midrule
+Naive ANN & Generalization gap lớn; nhầm mạnh ở các cặp gần nhau như $7 \rightarrow 2$, $4 \rightarrow 9$ & Thêm \textit{deslant + recenter + HOG} để đưa thông tin hình học và hướng nét vào ANN \\
+Single-branch ANN & Độ chính xác tăng mạnh nhưng vẫn nhạy với biến thiên nét viết cục bộ & Bổ sung \textit{elastic distortion} và \textit{stroke jitter} augmentation \\
+Single-branch + local augmentation & Kết quả gần bão hòa; raw và HOG có thể đang bị hòa trộn quá sớm & Tách raw pixel và HOG thành hai nhánh riêng trước khi hợp nhất \\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,16 @@
+\begin{table}[H]
+\centering
+\caption{Logic chuyển từ một biến thể ANN sang biến thể kế tiếp trên FashionMNIST}
+\label{tab:fashion-ann-iteration-logic}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X}
+\toprule
+Biến thể hiện tại & Điểm yếu quan sát được & Ý tưởng cho biến thể kế tiếp \\
+\midrule
+Naive ANN & Chỉ dựa vào raw pixel nên rất nhạy với silhouette tổng quát và khó tách các lớp áo gần nhau & Thêm deslant, recenter và HOG để bổ sung thông tin hướng nét và hình học \\
+Single-branch ANN & Các lớp áo như \textit{Shirt}, \textit{Pullover}, \textit{Coat} vẫn chồng lấn mạnh & Thử tách raw pixel và HOG thành hai nhánh riêng \\
+Two-branch ANN & Tách nhánh không cải thiện; test accuracy còn thấp hơn single-branch & Giữ kiến trúc đơn mạnh nhất và giảm phương sai bằng ensemble nhiều seed \\
+Single-branch ensemble & Lỗi \textit{Shirt} $\leftrightarrow$ \textit{T-shirt/top}$/$\textit{Pullover}$/$\textit{Coat} vẫn là nút thắt chính & Tăng đặc trưng vùng thân trên để nhấn khác biệt ở cổ áo, vai và tay áo \\
+\bottomrule
+\end{tabularx}
+\end{table}

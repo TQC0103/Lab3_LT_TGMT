@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\caption{Thông số huấn luyện của các biến thể ANN trên FashionMNIST}
+\label{tab:fashion-ann-hyperparameters}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}X}
+\toprule
+Biến thể & Tối ưu hóa & Batch/epoch & Tiền xử lý và augmentation \\
+\midrule
+Naive ANN & Adam, CE, không scheduler & $256 / 50$ & Chỉ raw pixel, không tiền xử lý bổ sung \\
+Single-branch ANN & AdamW, CE+LS, cosine, $wd=10^{-4}$ & $256 / 50$ & Affine; deslant; recenter; HOG \\
+Two-branch ANN & AdamW, CE+LS, cosine, $wd=10^{-4}$ & $256 / 50$ & Affine; deslant; recenter; tách raw/HOG \\
+Single-branch ensemble & 3 lần chạy single-branch với seed khác nhau & $256 / 50$ mỗi mô hình & Cùng pipeline single-branch; ensemble ở bước test \\
+Region-fusion ensemble & 3 lần chạy ANN vùng thân trên với seed khác nhau & $256 / 50$ mỗi mô hình & HOG toàn ảnh + HOG nửa trên + zoning + projection; ensemble ở bước test \\
+\bottomrule
+\end{tabularx}
+\end{table}

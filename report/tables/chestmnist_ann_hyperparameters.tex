@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{Thông số huấn luyện của ba biến thể ANN trên ChestMNIST}
+\label{tab:chestmnist-ann-hyperparameters}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{2.1cm} >{\raggedright\arraybackslash}X}
+\toprule
+Biến thể & Tối ưu hóa / loss & Batch/epoch & Thiết lập đặc trưng và đánh giá \\
+\midrule
+Naive ANN & Adam, BCEWithLogits & Theo notebook baseline / 45 & Raw pixel; dùng validation chính thức để theo dõi \\
+Weighted CV ANN & AdamW, weighted BCE & 3 fold / 25 & Raw pixel; 3-fold multilabel stratified CV; ensemble fold \\
+Feature-fusion lite ANN & AdamW, weighted focal BCE & 3 fold / 40 & Raw + HOG + LBP + histogram; 3-fold CV; ensemble fold \\
+\bottomrule
+\end{tabularx}
+\end{table}

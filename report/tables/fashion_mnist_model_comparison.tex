@@ -1,0 +1,16 @@
+\begin{table}[H]
+\centering
+\caption{So sánh các cấu hình ANN trên FashionMNIST}
+\label{tab:fashion-mnist-model-comparison}
+\begin{tabular}{l c c c}
+\toprule
+Mô hình & Final train acc & Test acc & Generalization gap \\
+\midrule
+Naive ANN & 0.9796 & 0.8959 & 0.0837 \\
+Single-branch ANN & 0.99997 & 0.9060 & 0.0940 \\
+Two-branch ANN & 0.99987 & 0.8969 & 0.1030 \\
+Single-branch ensemble & -- & 0.9168 & -- \\
+Region-fusion ensemble & -- & 0.9159 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

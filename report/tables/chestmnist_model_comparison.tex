@@ -1,0 +1,14 @@
+\begin{table}[H]
+\centering
+\caption{So sánh hai cấu hình ANN trên ChestMNIST}
+\label{tab:chestmnist-model-comparison}
+\begin{tabular}{l c c c}
+\toprule
+Cấu hình & Test macro AUC & Test ACC & Ghi chú \\
+\midrule
+Naive ANN & 0.7088 & 0.9475 & BCE + $t=0.5$ \\
+Weighted CV ANN & 0.7306 & 0.7141 & wBCE + CV + ensemble fold \\
+Feature-fusion Lite ANN & 0.7424 & 0.7301 & feature fusion + focal + CV \\
+\bottomrule
+\end{tabular}
+\end{table}

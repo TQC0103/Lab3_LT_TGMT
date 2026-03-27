@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{So sánh các seed của ensemble region-fusion trên FashionMNIST}
+\label{tab:fashion-mnist-region-fusion-seed-comparison}
+\begin{tabular}{l c c c}
+\toprule
+Cấu hình & Final train acc & Test acc & Generalization gap \\
+\midrule
+Seed 42 & 0.99998 & 0.9064 & 0.0936 \\
+Seed 52 & 0.99990 & 0.9109 & 0.0890 \\
+Seed 62 & 0.99993 & 0.9102 & 0.0897 \\
+Ensemble (3 models) & -- & 0.9159 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

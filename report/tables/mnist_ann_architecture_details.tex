@@ -1,0 +1,16 @@
+\begin{table}[H]
+\centering
+\caption{Thông số đầu vào và kiến trúc của bốn biến thể ANN}
+\label{tab:mnist-ann-architecture-details}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.0cm}}
+\toprule
+Biến thể & Đầu vào & Kiến trúc tuyến tính & Thành phần đi kèm \\
+\midrule
+Naive ANN & $784$ raw & $784 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & ReLU only \\
+Single-branch ANN & $2080 = 784 + 1296$ & $2080 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & BN + GELU + Dropout$(0.25)$ \\
+Single-branch + local augmentation & $2080 = 784 + 1296$ & $2080 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & Same as single-branch \\
+Two-branch ANN & Raw $784$, HOG $1296$ & Raw: $784 \rightarrow 512 \rightarrow 256$; HOG: $1296 \rightarrow 768 \rightarrow 256$; head: $512 \rightarrow 256 \rightarrow 10$ & BN + GELU + Dropout$(0.25)$ \\
+\bottomrule
+\end{tabularx}
+\end{table}

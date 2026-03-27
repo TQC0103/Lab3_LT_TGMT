@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{Kiến trúc ba biến thể ANN trên ChestMNIST}
+\label{tab:chestmnist-ann-architecture-details}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3.3cm} >{\raggedright\arraybackslash}p{3.1cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.2cm}}
+\toprule
+Biến thể & Đầu vào & Kiến trúc & Thành phần chính \\
+\midrule
+Naive ANN & Raw $784$ & $784 \rightarrow 512 \rightarrow 256 \rightarrow 14$ & ReLU, BCEWithLogits \\
+Weighted CV ANN & Raw $784$ & $784 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 14$ & BN + Dropout + weighted BCE \\
+Feature-fusion lite ANN & Raw + HOG + LBP + histogram & Feature fusion $\rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 14$ & BN + Dropout + weighted focal BCE \\
+\bottomrule
+\end{tabularx}
+\end{table}

@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\caption{Thông số huấn luyện và augmentation của bốn biến thể ANN}
+\label{tab:mnist-ann-hyperparameters}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{2.4cm} >{\raggedright\arraybackslash}X}
+\toprule
+Biến thể & Tối ưu hóa & Batch/epoch & Tiền xử lý và augmentation lúc train \\
+\midrule
+Naive ANN & Adam, CE, $lr=10^{-3}$ & $256 / 20$ & Không tiền xử lý, không augmentation \\
+Single-branch ANN & AdamW, CE+LS, cosine, $wd=10^{-4}$ & $256 / 20$ & Affine; deslant; recenter; HOG \\
+Single-branch + local augmentation & AdamW, CE+LS, cosine, $wd=10^{-4}$ & $256 / 20$ & Affine nhẹ; elastic distortion; stroke jitter; deslant; recenter; HOG \\
+Two-branch ANN & AdamW, CE+LS, cosine, $wd=10^{-4}$ & $256 / 20$ & Affine; deslant; recenter; tách raw/HOG \\
+\bottomrule
+\end{tabularx}
+\end{table}
+

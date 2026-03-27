@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{So sánh các seed single-branch ANN và ensemble trên FashionMNIST}
+\label{tab:fashion-mnist-seed-comparison}
+\begin{tabular}{l c c c}
+\toprule
+Cấu hình & Final train acc & Test acc & Generalization gap \\
+\midrule
+Seed 42 & 0.99992 & 0.9074 & 0.0925 \\
+Seed 52 & 0.99995 & 0.9086 & 0.0914 \\
+Seed 62 & 0.99992 & 0.9074 & 0.0925 \\
+Ensemble (3 models) & -- & 0.9168 & -- \\
+\bottomrule
+\end{tabular}
+\end{table}

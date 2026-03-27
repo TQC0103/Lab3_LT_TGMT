@@ -1,0 +1,15 @@
+\begin{table}[H]
+\centering
+\caption{Ba mô hình thành phần trong ensemble single-branch ANN trên FashionMNIST}
+\label{tab:fashion-mnist-ensemble-member-details}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.2cm} >{\raggedright\arraybackslash}p{1.4cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X}
+\toprule
+Mô hình & Seed & Đầu vào & Kiến trúc & Huấn luyện \\
+\midrule
+Model 1 & 42 & $2080 = 784 + 1296$ & $2080 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & AdamW, CE+LS, cosine, batch $256$, epoch $50$ \\
+Model 2 & 52 & $2080 = 784 + 1296$ & $2080 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & AdamW, CE+LS, cosine, batch $256$, epoch $50$ \\
+Model 3 & 62 & $2080 = 784 + 1296$ & $2080 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & AdamW, CE+LS, cosine, batch $256$, epoch $50$ \\
+\bottomrule
+\end{tabularx}
+\end{table}

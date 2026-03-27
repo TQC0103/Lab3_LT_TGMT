@@ -1,0 +1,148 @@
+\chapter{Phân loại MedMNIST (ChestMNIST) bằng ANN}
+
+\section{Tổng quan}
+
+Khác với MNIST và FashionMNIST, ChestMNIST là bài toán ảnh y sinh đa nhãn với mức độ khó cao hơn rõ rệt~\cite{yang2022medmnistv2}. Mỗi ảnh X-quang ngực có thể đồng thời mang nhiều bệnh, dữ liệu bị mất cân bằng mạnh, và benchmark chính thức ưu tiên \textit{AUC} cùng \textit{ACC} thay vì chỉ nhìn accuracy theo kiểu một nhãn~\cite{medmnist_site}. Vì vậy, chương này tiếp tục đi theo cùng logic của Chương 1: bắt đầu từ baseline đơn giản nhất để xem raw pixel thuần đi được đến đâu, sau đó lần lượt bổ sung weighted loss, cross-validation và feature engineering phù hợp với ảnh X-quang.
+
+\section{Phát biểu bài toán}
+
+ChestMNIST là bài toán \textit{multi-label classification} trên ảnh X-quang ngực kích thước $28 \times 28$~\cite{yang2022medmnistv2}. Đầu vào của mô hình là ảnh xám $28 \times 28$, tương đương $784$ pixel. Đầu ra của mô hình là vector logits $14$ chiều, trong đó mỗi phần tử trả lời một câu hỏi nhị phân độc lập: nhãn bệnh tương ứng có xuất hiện hay không. Vì mỗi ảnh có thể đồng thời mang nhiều bệnh, đầu ra không dùng softmax mà dùng $14$ xác suất sigmoid độc lập.
+
+Trong chương này có hai cách khai thác split dữ liệu. Baseline naive dùng trực tiếp ba split chính thức train/validation/test của ChestMNIST để lấy mặt bằng ban đầu. Hai biến thể mạnh hơn không tune trực tiếp trên validation chính thức; thay vào đó, chỉ split train được chia tiếp bằng \textit{3-fold multilabel stratified cross-validation}, còn split test chính thức vẫn được giữ riêng cho đánh giá cuối. Cách làm này giúp test tách biệt hoàn toàn khỏi quá trình huấn luyện.
+
+\input{tables/chestmnist_problem_setup}
+
+\section{Mô hình và tham số}
+\subsection{Baseline naive}
+
+Baseline naive là điểm xuất phát để kiểm tra xem ANN thuần trên raw pixel có thể học được bao nhiêu trên ChestMNIST. Ảnh đầu vào được chuẩn hóa về $[0,1]$, trải phẳng thành vector $784$ chiều, rồi đưa qua MLP:
+\[
+784 \rightarrow 512 \rightarrow 256 \rightarrow 14.
+\]
+Hai tầng ẩn dùng ReLU; tầng cuối giữ logits thô cho $14$ nhãn bệnh. Cấu hình $784 \rightarrow 512 \rightarrow 256 \rightarrow 14$ được chọn theo tinh thần baseline: đủ nhỏ để đóng vai trò mốc tối thiểu, nhưng vẫn có hai tầng ẩn để ANN có thể tái tổ hợp raw pixel thành biểu diễn phi tuyến cơ bản. Loss được chọn là BCEWithLogitsLoss vì đây là bài toán đa nhãn và mỗi nhãn bệnh phải được tối ưu như một bài toán nhị phân riêng; dùng softmax hoặc cross-entropy một nhãn ở đây sẽ làm sai bản chất bài toán. Baseline này chưa dùng BatchNorm, Dropout, feature engineering hay weighted loss.
+
+\input{tables/chestmnist_naive_results}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-ann/training_curves.png}
+  \caption{Diễn biến macro AUC và loss của baseline naive ANN trên ChestMNIST trong 45 epoch.}
+  \label{fig:chestmnist-training-curves}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-ann/per_class_auc.png}
+  \caption{AUC theo từng nhãn bệnh của baseline naive trên ChestMNIST.}
+  \label{fig:chestmnist-per-class-auc}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-ann/prevalence_vs_pred_rate.png}
+  \caption{So sánh tỷ lệ dương thật và tỷ lệ dương dự đoán ở ngưỡng $0.5$ của baseline naive trên ChestMNIST.}
+  \label{fig:chestmnist-prevalence-vs-pred-rate}
+\end{figure}
+
+\input{tables/chestmnist_per_class_auc}
+
+Baseline naive đạt \textit{test macro AUC} $0.7088$ và \textit{test ACC} $0.9475$. AUC cho thấy mô hình mới chỉ học được tín hiệu phân biệt ở mức vừa phải, trong khi ACC rất cao chủ yếu vì dữ liệu có quá nhiều nhãn âm. Hình prevalence-vs-pred-rate cho thấy mô hình gần như đoán âm cho phần lớn nhãn ở ngưỡng $0.5$, nên ACC cao nhưng chưa phản ánh tốt khả năng phát hiện ca bệnh thật.
+
+Từ kết quả này, có thể thấy vấn đề chính không phải ANN hoàn toàn bất lực trước ảnh X-quang, mà là động lực học huấn luyện hiện tại quá thiên về việc giữ nhãn âm. Vì vậy, bước cải tiến kế tiếp hợp lý nhất là thêm weighted loss và cross-validation để buộc mô hình chú ý nhiều hơn tới ca dương và ổn định hơn qua nhiều fold.
+
+\subsection{Weighted ANN với cross-validation nội bộ}
+
+Kết quả của baseline naive cho thấy hai vấn đề xuất hiện đồng thời. Thứ nhất, raw pixel thuần vẫn chứa tín hiệu phân biệt nhất định, thể hiện qua macro AUC vượt rõ mức ngẫu nhiên; tuy nhiên tín hiệu đó chưa đủ mạnh để đưa mô hình lên gần các benchmark tốt hơn. Thứ hai, mô hình có xu hướng chọn nghiệm an toàn theo hướng giữ nhiều nhãn âm, nên ACC cao nhưng chất lượng tách ca bệnh theo AUC còn hạn chế. Từ insight này, bước cải tiến hợp lý không phải là thêm handcrafted feature ngay lập tức, mà trước hết phải sửa đúng động lực học huấn luyện để mô hình coi trọng nhãn dương hơn và đánh giá nội bộ ổn định hơn trên tập train.
+
+Biến thể thứ hai vì vậy vẫn giữ đầu vào raw pixel để cô lập ảnh hưởng của kỹ thuật huấn luyện, nhưng thay đổi đồng thời cả kiến trúc và protocol. MLP được mở rộng thành:
+\[
+784 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 14.
+\]
+Chiều rộng tầng đầu tăng lên $1024$ để ANN có đủ năng lực biểu diễn hơn cho ảnh X-quang, vốn có cấu trúc khó hơn đáng kể so với chữ số viết tay và có nhiều tổn thương chỉ biểu hiện bằng thay đổi texture rất nhẹ. Hai tầng sau giảm dần về $512$ và $256$ để nén dần biểu diễn đã học, tránh giữ kích thước ẩn lớn suốt toàn mạng khiến số tham số tăng nhanh nhưng không bổ sung tương xứng về khả năng tổng quát hóa. BatchNorm được thêm để ổn định phân phối kích hoạt giữa các tầng ẩn, còn Dropout giúp giảm sự phụ thuộc quá mức giữa các neuron trong bối cảnh số nhãn dương tương đối ít. Nói cách khác, phương pháp này không chỉ rộng hơn baseline, mà còn được tổ chức theo hướng “mở rộng để hấp thụ tín hiệu yếu, rồi nén dần để giữ đặc trưng cần thiết”.
+
+Loss được đổi thành BCEWithLogitsLoss có \textit{pos\_weight}. Lý do là ChestMNIST bị mất cân bằng lớp mạnh: với nhiều nhãn bệnh, số mẫu âm áp đảo số mẫu dương. Nếu mọi nhãn đều bị phạt ngang nhau, quá trình tối ưu dễ nghiêng về chiến lược bảo thủ là ưu tiên đoán âm để giảm loss tổng thể. \textit{pos\_weight} làm tăng chi phí của việc bỏ sót nhãn dương, nên gradient thu được từ các ca bệnh trở nên đủ lớn để cạnh tranh với khối lượng mẫu âm. Nói cách khác, kỹ thuật này không nhằm tăng ACC, mà nhằm ép mô hình học tín hiệu bệnh thay vì chỉ dựa vào phân bố lớp.
+
+Cross-validation nội bộ được thêm vì hai lý do. Thứ nhất, nếu chỉ chia train một lần, kết quả sẽ phụ thuộc khá mạnh vào cách chia trong bối cảnh dữ liệu đa nhãn và mất cân bằng. \textit{3-fold multilabel stratified cross-validation} giữ phân bố nhãn ổn định hơn giữa các fold, từ đó cho phép quan sát chất lượng huấn luyện nội bộ đáng tin cậy hơn. Thứ hai, ba mô hình thu được từ ba fold có thể ensemble ở bước test. Với ANN trên dữ liệu khó như ChestMNIST, ensemble các fold thường giúp giảm phương sai giữa các nghiệm tối ưu cục bộ và cải thiện AUC ổn định hơn so với chỉ giữ một checkpoint đơn lẻ.
+
+\input{tables/chestmnist_weighted_cv_results}
+\input{tables/chestmnist_weighted_per_class}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-weighted-ann/model_comparison.png}
+  \caption{So sánh test macro AUC và ACC giữa baseline naive và weighted CV ANN trên ChestMNIST.}
+  \label{fig:chestmnist-model-comparison}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-weighted-ann/cv_val_auc_curves.png}
+  \caption{Đường cong validation macro AUC của 3 fold trong weighted CV ANN trên ChestMNIST.}
+  \label{fig:chestmnist-cv-val-auc}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-weighted-ann/per_class_auc.png}
+  \caption{AUC theo từng nhãn bệnh của weighted CV ANN ensemble trên ChestMNIST.}
+  \label{fig:chestmnist-weighted-per-class-auc}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-weighted-ann/prevalence_vs_pred_rate.png}
+  \caption{So sánh tỷ lệ dương thật và tỷ lệ dương dự đoán của weighted CV ANN ensemble trên ChestMNIST.}
+  \label{fig:chestmnist-weighted-prevalence}
+\end{figure}
+
+Weighted CV ANN nâng \textit{test macro AUC} lên $0.7306$. Mặc dù \textit{test ACC} giảm xuống $0.7141$, đây lại là hướng cải thiện đúng với benchmark y sinh: mô hình bắt đầu chấp nhận dự đoán dương nhiều hơn, thay vì tối đa hóa số lượng nhãn âm đúng. Các đường cong validation AUC của ba fold cũng cho thấy chất lượng nội bộ giữa các lần chia không dao động quá lớn, tức là hướng cải tiến này không chỉ tăng trên một split cụ thể mà có độ ổn định tốt hơn baseline.
+
+Sau bước này, insight rút ra là: thay đổi động lực học huấn luyện đã giúp ANN khai thác raw pixel tốt hơn, nhưng bản thân raw pixel vẫn chưa đủ giàu thông tin để đưa AUC lên sát các mốc benchmark mạnh hơn. Do đó, bước tiếp theo hợp lý là giữ lại weighted loss cùng protocol cross-validation, rồi bổ sung các handcrafted feature phù hợp với ảnh X-quang để đưa tín hiệu texture và cấu trúc vào ANN mà không cần chuyển sang CNN.
+
+\subsection{Feature-fusion lite ANN}
+
+Sau phương pháp 2, vấn đề còn lại không còn nằm chủ yếu ở loss hay protocol, mà ở bản thân biểu diễn đầu vào. Raw pixel giữ được cường độ sáng tại từng vị trí nhưng không mã hóa tường minh các tính chất texture và cấu trúc vốn quan trọng trong ảnh X-quang. Đây là lý do phương pháp 3 chuyển sang hướng \textit{feature fusion}: thay vì buộc ANN tự suy ra toàn bộ texture từ pixel thô, ta chủ động đưa vào những descriptor cổ điển vốn đã phù hợp với dữ liệu mức xám y sinh.
+
+Biến thể cuối cùng của chương này là \textit{feature-fusion lite ANN}. Mỗi ảnh được biểu diễn bởi bốn nhóm đặc trưng: raw pixel, HOG, LBP histogram và intensity histogram. Mỗi nhóm giữ một vai trò khác nhau: raw pixel bảo toàn cường độ gốc; HOG mã hóa hướng gradient và biên cấu trúc; LBP histogram nhấn mạnh texture cục bộ; intensity histogram mô tả phân bố mức xám toàn ảnh. Cách ghép này xuất phát trực tiếp từ giả thuyết rằng ảnh X-quang cỡ nhỏ cần đồng thời cả thông tin biên lẫn texture để ANN phân biệt tốt hơn giữa các mẫu có tổn thương và mẫu bình thường. Các đặc trưng được nối lại thành một vector chung, rồi đưa qua MLP:
+\[
+\text{feature fusion} \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 14.
+\]
+Kiến trúc ẩn được giữ cùng khung $1024 \rightarrow 512 \rightarrow 256$ như phương pháp 2 để phép so sánh tập trung vào tác động của đầu vào mới thay vì bị nhiễu bởi việc đổi mạng quá nhiều. Việc không thay phần thân mạng giúp kết luận cuối cùng rõ ràng hơn: nếu AUC tăng, nguồn cải thiện chủ yếu phải đến từ chất lượng biểu diễn đầu vào và cơ chế tối ưu, chứ không phải do mạng đột ngột sâu hơn hay rộng hơn. Loss được đổi tiếp thành weighted focal BCE. Nếu \textit{pos\_weight} ở phương pháp 2 giải quyết vấn đề mất cân bằng lớp ở mức toàn cục, thì focal term của phương pháp 3 đi thêm một bước nữa: giảm trọng số của các mẫu quá dễ và tập trung gradient nhiều hơn vào các ca khó hoặc còn bị nhầm. Điều này đặc biệt phù hợp khi đầu vào đã giàu tín hiệu hơn, vì mô hình cần ưu tiên học các ranh giới quyết định khó thay vì tiếp tục tối ưu những mẫu âm dễ.
+
+Protocol huấn luyện vẫn là \textit{3-fold cross-validation} trên split train chính thức và ensemble các fold ở bước test. Việc giữ nguyên protocol này là có chủ đích: nhờ đó, mọi cải thiện AUC ở phương pháp 3 có thể được quy về feature engineering và focal-weighted optimization, thay vì đến từ thay đổi cách đánh giá.
+
+\input{tables/chestmnist_lite_results}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-lite-ann/model_comparison.png}
+  \caption{So sánh theo phong cách benchmark giữa ba cấu hình ANN trên ChestMNIST.}
+  \label{fig:chestmnist-lite-model-comparison}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-lite-ann/per_class_auc.png}
+  \caption{AUC theo từng nhãn bệnh của feature-fusion lite ANN trên ChestMNIST.}
+  \label{fig:chestmnist-lite-per-class-auc}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\textwidth]{figures/chestmnist-lite-ann/prevalence_vs_pred_rate.png}
+  \caption{So sánh tỷ lệ dương thật và tỷ lệ dương dự đoán của feature-fusion lite ANN trên ChestMNIST.}
+  \label{fig:chestmnist-lite-prevalence}
+\end{figure}
+
+Feature-fusion lite ANN đạt \textit{macro AUC} $0.7424$ và \textit{ACC} $0.7301$, trở thành cấu hình ANN tốt nhất hiện tại trên ChestMNIST trong repo. Mốc AUC này đã tiệm cận baseline AutoKeras trong benchmark chính thức của MedMNIST~\cite{medmnist_site}. Nói rõ hơn, AutoKeras là một công cụ AutoML xây trên Keras/TensorFlow, nên đây là một baseline mạnh và có uy tín, nhưng chưa phải mốc trần cao nhất của benchmark. Vì vậy, việc ANN thuần trong báo cáo đạt gần mức này có thể xem là kết quả tốt và đáng tin cậy, dù vẫn còn khoảng cách so với các baseline CNN như ResNet.
+
+\section{Tổng hợp kết quả và nhận xét}
+
+\input{tables/chestmnist_ann_architecture_details}
+\input{tables/chestmnist_ann_hyperparameters}
+\input{tables/chestmnist_ann_iteration_logic}
+\input{tables/chestmnist_model_comparison}
+
+Các bảng tổng hợp cho thấy lộ trình cải tiến của Chương 3 khá nhất quán. Baseline naive cho ACC rất cao nhưng AUC còn thấp, vì mô hình hưởng lợi nhiều từ việc dự đoán âm. Weighted CV ANN sửa đúng điểm nghẽn này bằng cách thay đổi loss và protocol huấn luyện, từ đó nâng AUC lên rõ rệt. Feature-fusion lite ANN tiếp tục đẩy AUC lên $0.7424$ nhờ đưa thêm thông tin cấu trúc và texture phù hợp với ảnh X-quang vào đầu vào của ANN.
+
+Kết luận cho Chương 3 là: với ChestMNIST, thành phần quyết định hiệu quả không chỉ là mở rộng MLP, mà là kết hợp đúng giữa weighted loss, cross-validation ensemble và feature engineering phù hợp với dữ liệu y sinh. Đây cũng là chương cho thấy rõ nhất giới hạn của raw pixel thuần và giá trị của việc thiết kế đầu vào có chủ đích cho ANN.

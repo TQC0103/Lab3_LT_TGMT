@@ -1,0 +1,17 @@
+\begin{table}[H]
+\centering
+\caption{Kiến trúc các biến thể ANN trên FashionMNIST}
+\label{tab:fashion-ann-architecture-details}
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{3cm} >{\raggedright\arraybackslash}p{3.2cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{3.1cm}}
+\toprule
+Biến thể & Đầu vào & Kiến trúc & Thành phần chính \\
+\midrule
+Naive ANN & Raw pixel $784$ & $784 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & ReLU + fully-connected \\
+Single-branch ANN & $2080 = 784 + 1296$ & $2080 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & BN + GELU + Dropout$(0.25)$ \\
+Two-branch ANN & Raw $784$, HOG $1296$ & Raw: $784 \rightarrow 512 \rightarrow 256$; HOG: $1296 \rightarrow 768 \rightarrow 256$; head: $512 \rightarrow 256 \rightarrow 10$ & BN + GELU + Dropout$(0.25)$ \\
+Single-branch ensemble & 3 mô hình single-branch độc lập & Trung bình softmax probability của ba seed $42/52/62$ & Ensemble xác suất \\
+Region-fusion ensemble & $2814 = 784 + 1296 + 648 + 16 + 56 + 14$ & 3 mô hình $2814 \rightarrow 1024 \rightarrow 512 \rightarrow 256 \rightarrow 10$ & HOG vùng trên + zoning + projection + ensemble \\
+\bottomrule
+\end{tabularx}
+\end{table}
